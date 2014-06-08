@@ -10,13 +10,13 @@ import (
 
 type sample struct {
 	key string
-	value int
+	value int64
 }
 
 type RecordingSession struct {
 	logchan chan sample
 	samplesize int
-	dataMap map[string] []int
+	dataMap map[string] []int64
 	Recording bool `json:"-"`
 	StartTime time.Time
 	EndTime time.Time
@@ -28,7 +28,7 @@ func NewRecordingSession(samplesize int) *RecordingSession {
 	s := &RecordingSession{}
 	s.samplesize = samplesize
 	s.logchan = make(chan sample, s.samplesize/2)
-	s.dataMap = make(map[string] []int)
+	s.dataMap = make(map[string] []int64)
 	s.Recording = false
 	return s
 } 
@@ -54,7 +54,7 @@ func (s *RecordingSession) Start() error {
 	return nil
 }
 
-func (s *RecordingSession) LogSample(metric string, value int) error {
+func (s *RecordingSession) LogSample(metric string, value int64) error {
 	if !s.Recording {
 		return errors.New("Session is not currently recording.")
 	}
@@ -76,7 +76,7 @@ func (s *RecordingSession) processSamples() {
 			return
 		}
 		if s.dataMap[sample.key] == nil {
-			s.dataMap[sample.key] = make([]int, 0, s.samplesize)
+			s.dataMap[sample.key] = make([]int64, 0, s.samplesize)
 		}
 		s.dataMap[sample.key] = append(s.dataMap[sample.key], sample.value)
 	}
@@ -85,7 +85,7 @@ func (s *RecordingSession) processSamples() {
 type persistentSession struct {
 	StartTime time.Time
 	EndTime time.Time
-	Samples map[string] []int
+	Samples map[string] []int64
 }
 
 func (s *RecordingSession) Export() []byte {
@@ -127,6 +127,7 @@ func LoadStream(r io.Reader, samplesize int) (*RecordingSession, error) {
 	sess.dataMap = deserial.Samples
 	return sess, nil
 }
+
 
 
 
