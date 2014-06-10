@@ -6,6 +6,9 @@ import (
   "encoding/json"
   "io"
   "fmt"
+  "net"
+  "regexp"
+  "math/rand"
 )
 
 type sample struct {
@@ -21,7 +24,7 @@ type RecordingSession struct {
 	StartTime time.Time
 	EndTime time.Time
 	signalChan chan bool
-
+	Prefix string `json:"-"`
 }
 
 func NewRecordingSession(samplesize int) *RecordingSession {
@@ -57,6 +60,9 @@ func (s *RecordingSession) Start() error {
 func (s *RecordingSession) LogSample(metric string, value int64) error {
 	if !s.Recording {
 		return errors.New("Session is not currently recording.")
+	}
+	if s.Prefix != "" {
+		metric = s.Prefix + "_" + metric
 	}
 	sm := sample{metric, value}
 	s.logchan <- sm
@@ -99,6 +105,34 @@ func (s *RecordingSession) ExportStream(w io.Writer) error {
 	enc := json.NewEncoder(w)
 	err := enc.Encode(e)
 	return err
+}
+
+// Implements an instrumented dial. Use in the place of Dial in many applications
+func (s *RecordingSession) Dial(network, addr string) (net.Conn, error) {
+	reg, _ := regexp.Compile(`(.*):(\d+)$`)
+	res := reg.FindStringSubmatch(addr)
+	if res == nil {
+		return nil, errors.New("Unable to parse address.")
+	}
+	host := res[1]
+	port := res[2]
+	ip := net.ParseIP(host)
+	if ip == nil {
+		startClock := time.Now()
+		ips, err := net.LookupIP(host)
+		if err != nil {
+			return nil, err
+		}
+		s.LogSample("DNS", time.Now().Sub(startClock).Nanoseconds() )
+		ip = ips[rand.Intn(len(ips))]
+	}
+	startClock := time.Now()
+	conn, err := net.Dial("tcp", ip.String() + ":" + port)
+	if err != nil {
+		return nil, err
+	}
+	s.LogSample("TCP", time.Now().Sub(startClock).Nanoseconds() )
+	return conn, nil
 }
 
 func LoadSession( data []byte, samplesize int ) (*RecordingSession,error) {
