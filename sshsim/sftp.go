@@ -39,7 +39,7 @@ func (sim *SFTPSimulator) WalkDir(dirPath string) error {
 	return nil
 }
 
-func (sim *SFTPSimulator) PutRandomFile( fqdn string, size int64, buf int64) error {
+func (sim *SFTPSimulator) PutRandomFile( fqdn string, size int64) error {
 	startClock := time.Now()
 	f, err := sim.Client.Create(fqdn)
 	defer f.Close()
