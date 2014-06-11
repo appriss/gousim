@@ -52,7 +52,13 @@ func (sim *SFTPSimulator) PutRandomFile( fqdn string, size int64) error {
 	}
 	stopClock := time.Now()
 	sim.SSHSim.RecSession.LogSample("UPLOAD", stopClock.Sub(startClock).Nanoseconds())
-	sim.SSHSim.RecSession.LogSample("UPRATE", b / (stopClock.Sub(startClock).Nanoseconds() / 1000 / 1000))
+	var transTime, rate int64
+	transTime = (stopClock.Sub(startClock).Nanoseconds() / 1000 / 1000)
+	rate = 0
+	if  transTime > 0 {
+		rate = b / transTime
+	}
+	sim.SSHSim.RecSession.LogSample("UPRATE", rate)
 	return nil
 }
 
@@ -103,7 +109,14 @@ func (sim *SFTPSimulator) ReadAndThrowAwayFile(fqdn string) error {
 	}
 	stopClock := time.Now()
 	sim.SSHSim.RecSession.LogSample("DOWNLOAD", stopClock.Sub(startClock).Nanoseconds())
-	sim.SSHSim.RecSession.LogSample("DOWNRATE", b / (stopClock.Sub(startClock).Nanoseconds() / 1000 / 1000))
+	var transTime, rate int64
+	transTime = stopClock.Sub(startClock).Nanoseconds() / 1000 / 1000
+	rate = 0
+	if  transTime > 0 {
+		rate = b / transTime
+	}
+	sim.SSHSim.RecSession.LogSample("DOWNRATE", rate)
+
 	return nil
 }
 
