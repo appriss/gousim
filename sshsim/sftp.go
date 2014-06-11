@@ -90,4 +90,28 @@ func ( r *RandomBufferedData ) Read(p []byte) (int, error) {
 	return len(p), nil
 }
 
+func (sim *SFTPSimulator) ReadAndThrowAwayFile(fqdn string) error {
+	startClock := time.Now()
+	f, err := sim.Client.Open(fqdn)
+	defer f.Close()
+	if err != nil {
+		return err
+	}
+	b, err := io.Copy(&NullWriter{}, f)
+	if err != nil {
+		return err
+	}
+	stopClock := time.Now()
+	sim.SSHSim.RecSession.LogSample("DOWNLOAD", stopClock.Sub(startClock).Nanoseconds())
+	sim.SSHSim.RecSession.LogSample("DOWNRATE", b / (stopClock.Sub(startClock).Nanoseconds() / 1000 / 1000))
+	return nil
+}
+
+type NullWriter struct {	
+}
+
+func (w *NullWriter) Write(p []byte) (n int, err error) {
+	return len(p), nil
+}
+
 
