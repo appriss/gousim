@@ -14,6 +14,10 @@ var funcMap = template.FuncMap{"max":max, "min":min, "average":average, "total":
 //The default text report template string
 var text = "\nSimulation Results (Seconds):\n\n    Start Time: {{printf \"%32s\" (.StartTime)}}\n      End Time: {{printf \"%32s\" (.EndTime)}}\n\n{{range $i, $v := .Samples}}    Metric: {{printf \"%-30s\" $i}} # of Samples: {{printf \"%-10d\" (len $v)}} Max: {{printf \"%-10s\" (max $v)}} Min: {{printf \"%-10s\" (min $v)}} Average: {{printf \"%-10s\" (average $v)}} Total: {{printf \"%-10s\" (total $v)}}  \n{{end}}\n"
 
+var html = "<html><head><title>Simulation Results</title></head><body><h3>Simulation Results (Seconds):</h3><br><br><p>&nbsp;&nbsp;Start Time: {{printf \"%32s\" (.StartTime)}}\n      End Time: {{printf \"%32s\" (.EndTime)}}<br><br>&nbsp;&nbsp;{{range $i, $v := .Samples}}    Metric: {{printf \"%-30s\" $i}} # of Samples: {{printf \"%-10d\" (len $v)}} Max: {{printf \"%-10s\" (max $v)}} Min: {{printf \"%-10s\" (min $v)}} Average: {{printf \"%-10s\" (average $v)}} Total: {{printf \"%-10s\" (total $v)}}  <br>{{end}}<br></body></html>"
+
+
+
 func GetFuncMap() template.FuncMap {
 	return funcMap
 }
@@ -39,12 +43,42 @@ func TextReport(output io.Writer, data []byte) error {
 }
 
 //Prints out the default html report template
-func HtmlReport() error {
+func HtmlReport(output io.Writer, data []byte) error {
+	tmpl, err := template.New("TEXT REPORT").Funcs(funcMap).Parse(html)
+	if err != nil {
+		return err
+	}
+
+	report, err := loadData(data)
+	if err != nil {
+		return err
+	}
+
+	err = tmpl.Execute(output, report)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 //Prints out a custom report template provided by the caller
-func CustomReport(output io.Writer, result []byte, tmplstr string) error {
+func CustomReport(output io.Writer, data []byte, tmplstr string) error {
+	tmpl, err := template.New("CUSTOM REPORT").Funcs(funcMap).Parse(tmplstr)
+	if err != nil {
+		return err
+	}
+
+	report, err := loadData(data)
+	if err != nil {
+		return err
+	}
+
+	err = tmpl.Execute(output, report)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
