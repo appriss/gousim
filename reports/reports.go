@@ -12,7 +12,7 @@ import (
 var funcMap = template.FuncMap{"max":max, "min":min, "average":average, "total":total}
 
 //The default text report template string
-var text = "\nSimulation Results (Seconds):\n\n    Start Time: {{printf \"%32s\" (.StartTime)}}\n      End Time: {{printf \"%32s\" (.EndTime)}}\n\n{{range $i, $v := .Samples}}    Metric: {{printf \"%-30s\" $i}} Max: {{printf \"%-10s\" (max $v)}} Min: {{printf \"%-10s\" (min $v)}} Average: {{printf \"%-10s\" (average $v)}} Total: {{printf \"%-10s\" (total $v)}}  \n{{end}}\n"
+var text = "\nSimulation Results (Seconds):\n\n    Start Time: {{printf \"%32s\" (.StartTime)}}\n      End Time: {{printf \"%32s\" (.EndTime)}}\n\n{{range $i, $v := .Samples}}    Metric: {{printf \"%-30s\" $i}} # of Samples: {{printf \"%-10d\" (len $v)}} Max: {{printf \"%-10s\" (max $v)}} Min: {{printf \"%-10s\" (min $v)}} Average: {{printf \"%-10s\" (average $v)}} Total: {{printf \"%-10s\" (total $v)}}  \n{{end}}\n"
 
 func GetFuncMap() template.FuncMap {
 	return funcMap
