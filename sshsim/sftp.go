@@ -22,8 +22,12 @@ func NewSFTPSim(sim *SSHSimulation) (*SFTPSimulator, error) {
 }
 
 func (sim *SFTPSimulator) CloseAll() {
-	sim.Client.Close()
-	sim.SSHSim.Client.Close()
+	if sim.Client != nil {
+		sim.Client.Close()
+	}
+	if sim.SSHSim != nil && sim.SSHSim.Client != nil {
+		sim.SSHSim.Client.Close()
+	}
 }
 
 func (sim *SFTPSimulator) WalkDir(dirPath string) error {
